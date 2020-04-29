@@ -1,34 +1,16 @@
-node{
-
-   def tomcatWeb = 'C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps'
-   def tomcatBin = 'C:\Program Files\Apache Software Foundation\Tomcat 9.0\bin'
-   def tomcatStatus = ''
-   stage('SCM Checkout'){
-     git 'https://github.com/chandana-git/repo2.git'
-   }
-   stage('Compile-Package-create-war-file'){
-      // Get maven home path
-      def mvnHome =  tool name: 'maven-3', type: 'maven'   
-      bat "${mvnHome}/bin/mvn package"
-      }
-/*   stage ('Stop Tomcat Server') {
-               bat ''' @ECHO OFF
-               wmic process list brief | find /i "tomcat" > NUL
-               IF ERRORLEVEL 1 (
-                    echo  Stopped
-               ) ELSE (
-               echo running
-                  "${tomcatBin}\\shutdown.bat"
-                  sleep(time:10,unit:"SECONDS") 
-               )
-'''
-   }*/
-   stage('Deploy to Tomcat'){
-     bat "copy target\\JenkinsWar.war \"${tomcatWeb}\\JenkinsWar.war\""
-   }
-      stage ('Start Tomcat Server') {
-         sleep(time:5,unit:"SECONDS") 
-         bat "${tomcatBin}\\startup.bat"
-         sleep(time:100,unit:"SECONDS")
-   }
+node {
+stage('SCM Checkout')
+{
+git 'https://github.com/chandana-git/repo2.git'
+}
+stage('Compile Package from maven')
+{
+//since maven is installed as a plugin use tool in samsple step to find the command
+def mvnHome = tool name: 'Maven 3.6.3', type: 'maven'
+bat "${mvnHome}/bin/mvn clean package"
+}
+stage('Deploy to tomcat')
+{
+    deploy adapters: [tomcat9(credentialsId: 'e11d77ae-d6eb-41b6-9301-ce4b47c55079', path: '', url: 'http://localhost:9090/')], contextPath: null, war: 'target/JenkinsWar.war'
+}
 }
